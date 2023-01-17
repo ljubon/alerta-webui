@@ -85,6 +85,19 @@
             >
               {{ props.item.event }}
             </span>
+
+            <!-- Additional column for operational runbook links -->
+            <span
+              v-if="col == 'info'"
+            >
+              <div
+                v-for="data in dict"
+                :key="data.output"
+              >
+                <div v-html="findMatch(data,props)" />
+              </div>
+            </span>
+
             <span
               v-if="col == 'environment'"
             >
@@ -481,6 +494,9 @@ import DateTime from './lib/DateTime'
 import moment from 'moment'
 import i18n from '@/plugins/i18n'
 
+//imported mapping dictionary
+import dictData from '../config/runbook-data.json'
+
 export default {
   components: {
     DateTime
@@ -493,10 +509,12 @@ export default {
   },
   data: vm => ({
     search: '',
+    dict: dictData, // make the JSON dictionary available
     headersMap: {
       id: { text: i18n.t('AlertId'), value: 'id' },
       resource: { text: i18n.t('Resource'), value: 'resource' },
       event: { text: i18n.t('Event'), value: 'event' },
+      info: { text: i18n.t('Info'), value: 'info', sortable: false }, // Column to show operational runbook info.
       environment: { text: i18n.t('Environment'), value: 'environment' },
       severity: { text: i18n.t('Severity'), value: 'severity' },
       correlate: { text: i18n.t('Correlate'), value: 'correlate' },
@@ -549,8 +567,8 @@ export default {
     },
     columnWidths() {
       return {
-        '--value-width': this.valueWidth() + 'px',
-        '--text-width': this.textWidth() + 'px'
+        // '--value-width': this.valueWidth() + 'px',
+        // '--text-width': this.textWidth() + 'px' // altered to prevent overflow and odd spacing in last column
       }
     },
     isLoading() {
@@ -578,8 +596,7 @@ export default {
     },
     customHeaders() {
       return this.$config.columns.map(c =>
-        this.headersMap[c] || { text: this.$options.filters.capitalize(c), value: 'attributes.' + c }
-      )
+        this.headersMap[c] || { text: this.$options.filters.capitalize(c), value: 'attributes.' + c } )
     },
     selectedItem() {
       return this.alerts.filter(a => a.id == this.selectedId)[0]
@@ -642,6 +659,21 @@ export default {
     },
     removeHotkey(event) {
       event.code === 'ShiftLeft' || event.code === 'ShiftRight' ? this.shiftDown = false : 0
+    },
+    // method for mapping table data to links from runbook-data.json
+    findMatch(additionalRespObj, props){
+      const validMatch = additionalRespObj.matches.every(matchesObj => {
+        // make comparisons case-insensitive
+        const filter = new RegExp((matchesObj.regex).toLowerCase())
+        const columnName = (matchesObj.column).toLowerCase()
+        const columnData = (props.item[columnName]).toLowerCase()
+        return filter.test(columnData)
+      })
+      // return link if all regex checks pass
+      return validMatch ? additionalRespObj.output : null
+    },
+    attributeMatch(item){
+      return this.cars.id === carID ? true : false
     },
     duration(item) {
       return moment.duration(moment().diff(moment(item.receiveTime)))
@@ -845,7 +877,7 @@ div.select-box {
 }
 
 div.action-buttons {
-  position: absolute;
+  position: relative;
   opacity: 0;
   right: 0;
   top: 0.5em;
