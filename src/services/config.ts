@@ -34,6 +34,12 @@ class Config {
         console.log(error)
         throw error
       })
+      .then(config => {
+        if ('columns' in config) {
+          config.columns.push('info')
+        }
+        return config
+      })
   }
 
   getEnvConfig() {

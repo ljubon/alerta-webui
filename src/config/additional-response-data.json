@@ -1,0 +1,46 @@
+[
+    {
+      "output": "<a href=https://link-to-correct-resource.com>handbook1</a>",
+      "matches": [
+        {
+          "column":"event",
+          "regex":"http.*"
+        }
+      ]
+    },
+    {
+      "output": "<a href=https://link-to-correct-resource.com>handbook2</a>",
+      "matches": [
+        {
+          "column":"resource",
+          "regex":"web01"
+        },
+        {
+          "column":"Environment",
+          "regex":"^Dev.*$"
+        }
+      ]
+    },
+    {
+      "output": "<a href=https://link-to-correct-resource.com>handbook3</a>",
+      "matches": [
+        {
+          "column":"text",
+          "regex":"^To.*404.*$"
+        }
+      ]
+    },
+    {
+      "output": "<a href=https://link-to-correct-resource.com>handbook4</a>",
+      "matches": [
+        {
+          "column":"text",
+          "regex":"^.*down$"
+        },
+        {
+          "column":"severity",
+          "regex":"^Crit.*$"
+        }
+      ]
+    }
+]
