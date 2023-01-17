@@ -14,8 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     env:
       REPOSITORY_URL: ghcr.io
-      IMAGE_NAME: ${{ github.repository_owner }}/alerta-webui
     steps:
+      - id: string
+        uses: ASzc/change-string-case-action@v5
+        with: 
+          string: ${{ github.repository_owner }}/alerta-webui
       - name: Checkout
         uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -29,10 +32,10 @@ jobs:
         id: docker-build
         run: >-
           docker build
-          -t $IMAGE_NAME
-          -t $REPOSITORY_URL/$IMAGE_NAME:$(cat VERSION)
-          -t $REPOSITORY_URL/$IMAGE_NAME:${{ steps.vars.outputs.SHORT_COMMIT_ID }}
-          -t $REPOSITORY_URL/$IMAGE_NAME:latest .
+          -t ${{ steps.string.outputs.lowercase }}
+          -t $REPOSITORY_URL/${{ steps.string.outputs.lowercase }}:$(cat VERSION)
+          -t $REPOSITORY_URL/${{ steps.string.outputs.lowercase }}:${{ steps.vars.outputs.SHORT_COMMIT_ID }}
+          -t $REPOSITORY_URL/${{ steps.string.outputs.lowercase }}:latest .
       - name: Docker Login
         uses: docker/login-action@v1
         with:
@@ -41,7 +44,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish Image
         id: docker-push
-        run: docker push --all-tags $REPOSITORY_URL/$IMAGE_NAME
+        run: docker push --all-tags $REPOSITORY_URL/${{ steps.string.outputs.lowercase }}
 
       - uses: act10ns/slack@v1
         with:
