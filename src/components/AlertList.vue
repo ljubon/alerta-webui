@@ -97,7 +97,6 @@
                 <div v-html="findMatch(data,props)" />
               </div>
             </span>
-
             <span
               v-if="col == 'environment'"
             >
