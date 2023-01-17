@@ -495,7 +495,7 @@ import moment from 'moment'
 import i18n from '@/plugins/i18n'
 
 //imported mapping dictionary
-import dictData from '../config/additional-response-data'
+import dictData from '../config/runbook-data.json'
 
 export default {
   components: {
@@ -514,7 +514,7 @@ export default {
       id: { text: i18n.t('AlertId'), value: 'id' },
       resource: { text: i18n.t('Resource'), value: 'resource' },
       event: { text: i18n.t('Event'), value: 'event' },
-      info: { text: i18n.t('Info'), value: 'info' }, // Column to show operational runbook info.
+      info: { text: i18n.t('Info'), value: 'info', sortable: false }, // Column to show operational runbook info.
       environment: { text: i18n.t('Environment'), value: 'environment' },
       severity: { text: i18n.t('Severity'), value: 'severity' },
       correlate: { text: i18n.t('Correlate'), value: 'correlate' },
@@ -627,7 +627,7 @@ export default {
     }
   },
   methods: {   
-    // method for mapping table data to links from additional-response-data.json
+    // method for mapping table data to links from runbook-data.json
     findMatch(additionalRespObj, props){   
       const validMatch = additionalRespObj.matches.every(matchesObj => {
         // make comparisons case-insensitive
