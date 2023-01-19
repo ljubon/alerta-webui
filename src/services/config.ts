@@ -36,7 +36,9 @@ class Config {
       })
       .then(config => {
         if ('columns' in config) {
-          config.columns.push('info')
+          if (config.hasOwnProperty('runbook')) {
+            config.columns.push('info')
+          }
         }
         return config
       })
