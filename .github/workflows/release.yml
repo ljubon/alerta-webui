@@ -34,11 +34,15 @@ jobs:
   release:
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: '14'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
       - run: npm version
       - run: npm install
       - name: Build artifacts
@@ -47,14 +51,11 @@ jobs:
           npm run build
           zip alerta-webui.zip -r dist/*
           tar cvfz alerta-webui.tar.gz dist/*
-      - name: Create Release
-        id: create-release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          artifacts: "alerta-webui.tar.gz,alerta-webui.zip"
+          tag: ${{ github.ref }}
+          name: Release ${{ github.ref }}
           draft: false
           prerelease: false
       - name: Upload Zip File
