@@ -5,46 +5,57 @@ on:
     branches: [ master, release/* ]
     tags: [ '**' ]
 
-env:
-  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
 jobs:
   build:
     name: Build & Push
     runs-on: ubuntu-latest
+    permissions: 
+      packages: write
     env:
       REPOSITORY_URL: ghcr.io
-      IMAGE_NAME: ${{ github.repository_owner }}/alerta-webui
+      IMAGE_NAME: ${{ github.repository }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
           node-version: '14'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
       - run: npm version
-      - name: Variables
+      - name: Set variables
         id: vars
-        run: echo "::set-output name=SHORT_COMMIT_ID::$(git rev-parse --short HEAD)"
-      - name: Build image
-        id: docker-build
-        run: >-
-          docker build
-          -t $IMAGE_NAME
-          -t $REPOSITORY_URL/$IMAGE_NAME:$(cat VERSION)
-          -t $REPOSITORY_URL/$IMAGE_NAME:${{ steps.vars.outputs.SHORT_COMMIT_ID }}
-          -t $REPOSITORY_URL/$IMAGE_NAME:latest .
-      - name: Docker Login
+        run: |
+          echo "SHORT_COMMIT_ID=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "VERSION=$(cat VERSION)" >> $GITHUB_OUTPUT
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
         with:
           registry: ${{ env.REPOSITORY_URL }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Publish Image
-        id: docker-push
-        run: docker push --all-tags $REPOSITORY_URL/$IMAGE_NAME
-
+      - name: Set image tags
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REPOSITORY_URL }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.vars.outputs.VERSION }}
+            type=raw,value=${{ github.sha }}
+            type=raw,value=latest
+      - name: Build & Push Image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          build-args: |
+            VERSION=${{ steps.vars.outputs.VERSION }}
+            BUILD_DATE=${{ steps.vars.outputs.BUILD_DATE }}
+            VCS_REF=${{ steps.vars.outputs.SHORT_COMMIT_ID }}
+          tags: ${{ steps.meta.outputs.tags }}
+          push: true
       - uses: act10ns/slack@v1
+        if: failure()
         with:
           status: ${{ job.status }}
           steps: ${{ toJson(steps) }}
-        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
