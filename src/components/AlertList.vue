@@ -91,7 +91,7 @@
               v-if="col == 'info'"
             >
               <div
-                v-for="data in dict"
+                v-for="data in $config.runbook"
                 :key="data.output"
               >                
                 <div v-html="findMatch(data,props)" />
@@ -494,9 +494,6 @@ import DateTime from './lib/DateTime'
 import moment from 'moment'
 import i18n from '@/plugins/i18n'
 
-//imported mapping dictionary
-import dictData from '../config/runbook-data.json'
-
 export default {
   components: {
     DateTime
@@ -509,7 +506,6 @@ export default {
   },
   data: vm => ({
     search: '',
-    dict: dictData, // make the JSON dictionary available
     headersMap: {
       id: { text: i18n.t('AlertId'), value: 'id' },
       resource: { text: i18n.t('Resource'), value: 'resource' },
@@ -627,7 +623,7 @@ export default {
     }
   },
   methods: {   
-    // method for mapping table data to links from runbook-data.json
+    // method for mapping table data to links from runbook data
     findMatch(additionalRespObj, props){   
       const validMatch = additionalRespObj.matches.every(matchesObj => {
         // make comparisons case-insensitive
