@@ -1,6 +1,6 @@
 # build stage
-FROM node:12-alpine as build-stage
-RUN apk add --no-cache git
+FROM node:14-alpine as build-stage
+RUN apk add --no-cache git python3 py3-pip make g++
 WORKDIR /app
 COPY package*.json ./
 RUN npm install

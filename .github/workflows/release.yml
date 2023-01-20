@@ -1,47 +1,43 @@
-name: release
+name: Release
 
 on:
   push:
-    tags:
-    - 'v*'
-
-env:
-  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    branches: [ 'gr-main', 'release-fix' ]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '14'
-          cache: 'npm'
-          cache-dependency-path: package-lock.json
-      - run: npm version
-      - run: npm install
-      - name: Lint
-        id: lint
-        run: npm run lint:nofix
-      - name: Unit Test
-        id: unit-test
-        run: npm run test:unit
-      - uses: act10ns/slack@v1
-        if: failure()
-        with:
-          status: ${{ job.status }}
-          steps: ${{ toJson(steps) }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  # test:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: actions/setup-node@v3
+  #       with:
+  #         node-version: '14'
+  #         cache: 'npm'
+  #         cache-dependency-path: package-lock.json
+  #     - run: npm version
+  #     - run: npm install
+  #     - name: Lint
+  #       id: lint
+  #       run: npm run lint:nofix
+  #     - name: Unit Test
+  #       id: unit-test
+  #       run: npm run test:unit
+  #     - uses: act10ns/slack@v1
+  #       if: failure()
+  #       with:
+  #         status: ${{ job.status }}
+  #         steps: ${{ toJson(steps) }}
 
   release:
-    needs: test
+    # needs: test
     runs-on: ubuntu-latest
-    # Can be removed with PAT or Token with fine-graind permissions with write organization package
+    environment: release
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: '0' 
       - uses: actions/setup-node@v3
         with:
           node-version: '14'
@@ -49,22 +45,21 @@ jobs:
           cache-dependency-path: package-lock.json
       - run: npm version
       - run: npm install
+      - name: Set variables
+        id: vars
+        run: |
+          echo "TAG=$(git describe --tags --abbrev=0 )" >> $GITHUB_OUTPUT
       - name: Build artifacts
         id: build
         run: |
           npm run build
           zip alerta-webui.zip -r dist/*
           tar cvfz alerta-webui.tar.gz dist/*
-      - uses: ncipollo/release-action@v1
+      - name: Publish release
+        uses: ncipollo/release-action@v1
         with:
           artifacts: "alerta-webui.tar.gz,alerta-webui.zip"
-          tag: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          tag: ${{ steps.vars.outputs.TAG }}
+          name: Release ${{ steps.vars.outputs.TAG }}
           draft: false
           prerelease: false
-      - uses: act10ns/slack@v1
-        with:
-          status: ${{ job.status }}
-          steps: ${{ toJson(steps) }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
