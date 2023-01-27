@@ -618,7 +618,16 @@ export default {
                 const highIndex = Math.max(alertIndex, indexes[i - 1])
                 // fill in all the missing alerts
                 for (let j = lowIndex + 1; j < highIndex; j++) {
-                  value.push(alerts[j])
+                  // check if alert is already in the selected list
+                  let foundAlert = false
+                  value.forEach( alert => {
+                    if( alert.id === alerts[j].id) {
+                      foundAlert = true
+                    }
+                  } )
+                  if (!foundAlert) {
+                    value.push(alerts[j])
+                  }
                 }
               }
             }
