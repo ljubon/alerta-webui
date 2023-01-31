@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alerta/alerta-webui.git"
+    "url": "git+https://github.com/ljubon/alerta-webui.git"
   },
   "keywords": [
     "alerta",
@@ -58,7 +58,7 @@
     "babel-eslint": "^10.1.0",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.2.3",
-    "node-sass": "^4.14.1",
+    "node-sass": "^8.0.0",
     "prettier": "^2.4.1",
     "sass-loader": "^7.3.1",
     "stylus": "^0.54.8",
