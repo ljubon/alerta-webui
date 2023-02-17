@@ -95,12 +95,8 @@ export default {
   },
   methods: {
     selectAsi() {
-      this.setSearch(new URLSearchParams(this.query))
-      this.setFilter(new URLSearchParams(this.query))
+      this.setFilter(this.createURLSearchParams())
       this.refreshList()
-    },
-    setSearch(query) {
-      this.$store.dispatch('alerts/updateQuery', query)
     },
     setFilter(filter) {
       this.$store.dispatch('alerts/setFilter', {
@@ -113,11 +109,27 @@ export default {
       })
     },
     severityColor(severity) {
-      return this.counts && this.counts[severity] > 0 ? this.$store.getters.getConfig('colors').severity[severity] : 'transparent'
+      return this.counts && this.counts[severity] ? this.$store.getters.getConfig('colors').severity[severity] : 'transparent'
     },
-    getCounts() {
-      return AlertsApi.getCounts(new URLSearchParams(this.query))
-        .then(response => (this.counts = response.severityCounts))
+    createURLSearchParams() {
+      const countsFilter = this.$store.getters.getConfig('countsFilter')
+      if (countsFilter) {
+        // depending on the type of query, build the search params
+        if (Array.isArray(this.query)) {
+          return new URLSearchParams([...this.query, ['status', countsFilter]])
+        } else {
+          let queryStr = this.query.toString()
+          if (typeof this.query === 'object') {
+            queryStr = this.query.q.replace(':', '=')
+          }
+          return new URLSearchParams(`${queryStr}&status=${countsFilter}`)
+        }
+      }
+      return new URLSearchParams(this.query)
+    },
+    async getCounts() {
+      const response = await AlertsApi.getCounts(this.createURLSearchParams())
+      this.counts = response.severityCounts
     },
     getMostSevere() {
       let paramsWithOpenStatus = new URLSearchParams(this.query)
