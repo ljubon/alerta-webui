@@ -1,0 +1,5 @@
+version: "1"
+rules:
+  - base: gr-main
+    upstream: G-Research:gr-main
+    mergeMethod: hardreset
